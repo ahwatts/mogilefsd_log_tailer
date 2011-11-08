@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'bundler/setup'
+
+require 'mogilefsd_log_tailer'
+require 'mogilefsd_log_tailer/version'
+
+puts MogilefsdLogTailer::VERSION
