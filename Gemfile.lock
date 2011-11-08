@@ -1,0 +1,14 @@
+PATH
+  remote: .
+  specs:
+    mogilefsd_log_tailer (0.0.1)
+
+GEM
+  remote: http://rubygems.org/
+  specs:
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  mogilefsd_log_tailer!
