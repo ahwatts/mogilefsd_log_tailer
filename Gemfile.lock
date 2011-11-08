@@ -2,10 +2,12 @@ PATH
   remote: .
   specs:
     mogilefsd_log_tailer (0.0.1)
+      eventmachine
 
 GEM
   remote: http://rubygems.org/
   specs:
+    eventmachine (0.12.10)
 
 PLATFORMS
   ruby
