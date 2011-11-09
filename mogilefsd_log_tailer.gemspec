@@ -8,8 +8,8 @@ Gem::Specification.new do |s|
   s.authors     = ["Andrew Watts"]
   s.email       = ["ahwatts@gmail.com"]
   s.homepage    = ""
-  s.summary     = %q{TODO: Write a gem summary}
-  s.description = %q{TODO: Write a gem description}
+  s.summary     = %q{Script to do "tail -f" on the "!watch" output from several MogileFS trackers.}
+  s.description = %q{Script to do "tail -f" on the "!watch" output from several MogileFS trackers.}
 
   s.rubyforge_project = "mogilefsd_log_tailer"
 
