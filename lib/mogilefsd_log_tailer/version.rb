@@ -1,3 +1,3 @@
-module MogilefsdLogTailer
+class MogilefsdLogTailer
   VERSION = "0.0.1"
 end
