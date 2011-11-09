@@ -1,30 +1,39 @@
 require 'mogilefsd_log_tailer/version'
 require 'optparse'
 require 'eventmachine'
+require 'socket'
 
 class MogilefsdLogTailer
   module Handler
     def post_init
       @received_data = ''
+      send_data("!watch\r\n")
     end
 
     def receive_data(data)
       port, ip = Socket.unpack_sockaddr_in(get_peername)
-      puts("Received #{data.inspect} from #{ip}:#{port}")
-      if data =~ /\n/
-        lines = data.split("\n")
-        @received_data << lines.first
-        print_log_entry(@received_data, ip, port)
-        lines[1..-2].each { |l| print_log_entry(l, ip, port) }
-        @received_data = lines.last
+      # puts("Received #{data.inspect} from #{ip}:#{port}")
+      if data =~ /\r\n/
+        lines = data.split("\r\n")
+        lines.each_with_index do |line, i|
+          # puts("line #{i}: #{line.inspect}")
+          if i == 0
+            print_log_entry(@received_data + line, ip, port)
+            @received_data = ''
+          elsif i == lines.size - 1
+            @received_data << line
+          else
+            print_log_entry(line, ip, port)
+          end
+        end
       else
         @received_data << data
       end
-      puts("@received_data = #{@received_data}")
+      # puts("@received_data = #{@received_data.inspect}")
     end
 
     def print_log_entry(line, ip, port)
-      puts("Printing line: #{line.inspect} from #{ip}:#{port}")
+      puts("#{Time.now.to_s}: #{ip}:#{port}: #{line}")
     end
   end
 
