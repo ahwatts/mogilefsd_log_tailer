@@ -12,11 +12,10 @@ class MogilefsdLogTailer
 
     def receive_data(data)
       port, ip = Socket.unpack_sockaddr_in(get_peername)
-      # puts("Received #{data.inspect} from #{ip}:#{port}")
+      puts(" - Received #{data.inspect} from #{ip}:#{port}")
       if data =~ /\r\n/
-        lines = data.split("\r\n")
+        lines = data.split("\r\n", -1)
         lines.each_with_index do |line, i|
-          # puts("line #{i}: #{line.inspect}")
           if i == 0
             print_log_entry(@received_data + line, ip, port)
             @received_data = ''
@@ -29,7 +28,6 @@ class MogilefsdLogTailer
       else
         @received_data << data
       end
-      # puts("@received_data = #{@received_data.inspect}")
     end
 
     def print_log_entry(line, ip, port)
