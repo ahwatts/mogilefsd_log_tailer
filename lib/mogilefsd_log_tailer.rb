@@ -1,45 +1,11 @@
 require 'mogilefsd_log_tailer/version'
+require 'mogilefsd_log_tailer/tail_handler'
 require 'optparse'
-require 'eventmachine'
-require 'socket'
 
-class MogilefsdLogTailer
-  module Handler
-    def post_init
-      @received_data = ''
-      send_data("!watch\r\n")
-    end
+module MogilefsdLogTailer
+  def self.parse_options!
+    hosts = []
 
-    def receive_data(data)
-      port, ip = Socket.unpack_sockaddr_in(get_peername)
-      puts(" - Received #{data.inspect} from #{ip}:#{port}")
-      if data =~ /\r\n/
-        lines = data.split("\r\n", -1)
-        lines.each_with_index do |line, i|
-          if i == 0
-            print_log_entry(@received_data + line, ip, port)
-            @received_data = ''
-          elsif i == lines.size - 1
-            @received_data << line
-          else
-            print_log_entry(line, ip, port)
-          end
-        end
-      else
-        @received_data << data
-      end
-    end
-
-    def print_log_entry(line, ip, port)
-      puts("#{Time.now.to_s}: #{ip}:#{port}: #{line}")
-    end
-  end
-
-  def initialize
-    @hosts = []
-  end
-
-  def parse_options!
     OptionParser.new do |o|
       script_name = File.basename($0)
       o.set_summary_indent('  ')
@@ -49,20 +15,24 @@ class MogilefsdLogTailer
     end.parse!
 
     while (h = ARGV.shift)
-      @hosts << h
+      hosts << h
     end
 
-    if @hosts.empty?
+    if hosts.empty?
       STDERR.puts("No hosts to tail.")
       exit(1)
     end
+
+    [ hosts, {} ]
   end
 
-  def run
+  def self.run
+    hosts, options = parse_options!
+
     EventMachine.run do
-      @hosts.each do |hp|
+      hosts.each do |hp|
         host, port = hp.split(':')
-        EventMachine.connect(host, port.to_i, Handler)
+        EventMachine.connect(host, port.to_i, TailHandler, host)
       end
     end
   end

@@ -4,8 +4,4 @@ require 'rubygems'
 require 'bundler/setup'
 
 require 'mogilefsd_log_tailer'
-require 'mogilefsd_log_tailer/version'
-
-lt = MogilefsdLogTailer.new
-lt.parse_options!
-lt.run
+MogilefsdLogTailer.run
