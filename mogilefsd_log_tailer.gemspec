@@ -13,6 +13,7 @@ Gem::Specification.new do |s|
 
   s.rubyforge_project = "mogilefsd_log_tailer"
 
+  s.add_dependency('daemons')
   s.add_dependency('eventmachine')
 
   s.files         = `git ls-files`.split("\n")

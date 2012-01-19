@@ -2,11 +2,13 @@ PATH
   remote: .
   specs:
     mogilefsd_log_tailer (0.0.2)
+      daemons
       eventmachine
 
 GEM
   remote: http://rubygems.org/
   specs:
+    daemons (1.1.6)
     eventmachine (0.12.10)
 
 PLATFORMS

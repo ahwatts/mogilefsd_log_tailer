@@ -2,9 +2,15 @@ require 'eventmachine'
 
 module MogilefsdLogTailer
   class TailHandler < EventMachine::Connection
-    def initialize(hostname)
+    def initialize(hostname, filename)
       @hostname = hostname
       @received_data = ''
+
+      if filename.nil? || filename.empty?
+        @file = $stdout
+      else
+        @file = File.open(filename, 'wb')
+      end
     end
 
     def post_init
@@ -32,7 +38,9 @@ module MogilefsdLogTailer
     end
 
     def print_log_entry(line)
-      puts("#{Time.now.to_s}: #{@hostname}: #{line}")
+      msg = "#{Time.now.to_s}: #{@hostname}: #{line}"
+      @file.puts(msg)
+      @file.flush
     end
   end
 end
