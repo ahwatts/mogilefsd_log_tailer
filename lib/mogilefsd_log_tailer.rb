@@ -40,24 +40,29 @@ module MogilefsdLogTailer
   def self.run
     hosts, options = parse_options!
 
+    log_file = $stdout
     log_dir = File.expand_path(File.join(File.dirname(__FILE__), '..'))
+
     if options[:filename]
       log_dir = File.dirname(options[:filename])
     end
 
     if options[:daemonize]
-      Daemons.daemonize(
-        :app_name => 'mogilefsd_log_tailer',
-        :dir_mode => :normal,
-        :dir => log_dir,
-        :log_output => true
-        )
+      Daemons.daemonize({
+          :dir_mode => :normal,
+          :dir => log_dir,
+          :log_output => true,
+        })
+    end
+
+    if options[:filename]
+      log_file = File.open(options[:filename], 'ab')
     end
 
     EventMachine.run do
       hosts.each do |hp|
         host, port = hp.split(':')
-        EventMachine.connect(host, port.to_i, TailHandler, host, options[:filename])
+        EventMachine.connect(host, port.to_i, TailHandler, host, log_file)
       end
     end
   end
