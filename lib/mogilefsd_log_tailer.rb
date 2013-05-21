@@ -49,6 +49,7 @@ module MogilefsdLogTailer
 
     if options[:daemonize]
       Daemons.daemonize({
+          :app_name => 'mogilefsd_tail',
           :dir_mode => :normal,
           :dir => log_dir,
           :log_output => true,
