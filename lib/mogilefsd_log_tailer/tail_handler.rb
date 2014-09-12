@@ -10,7 +10,12 @@ module MogilefsdLogTailer
 
     def post_init
       @received_data = ''
+      @port, @ip = Socket.unpack_sockaddr_in(get_peername)
+    end
+
+    def connection_completed
       send_data("!watch\r\n")
+      @reconnects = 5
     end
 
     def receive_data(data)
@@ -29,6 +34,24 @@ module MogilefsdLogTailer
         end
       else
         @received_data << data
+      end
+    end
+
+    def unbind
+      if @reconnects > 0
+        print_log_entry "[mogilefsd_log_tailer] Connection closed to #{@hostname} (#{@ip}:#{@port}), reconnects left: #{@reconnects}"
+        @reconnects -= 1
+        EventMachine::Timer.new(1) do
+          print_log_entry "[mogilefsd_log_tailer] Reconnecting to #{@hostname} (#{@ip}:#{@port})..."
+          reconnect(@ip, @port)
+        end
+      else
+        print_log_entry "[mogilefsd_log_tailer] Giving up on #{@hostname} (#{@ip}:#{@port})"
+        EventMachine::Timer.new(0.5) do
+          if EventMachine.connection_count == 0
+            EventMachine.stop_event_loop
+          end
+        end
       end
     end
 
