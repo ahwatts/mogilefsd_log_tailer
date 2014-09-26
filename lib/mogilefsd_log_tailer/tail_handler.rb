@@ -1,4 +1,5 @@
 require 'eventmachine'
+require 'socket'
 
 module MogilefsdLogTailer
   class TailHandler < EventMachine::Connection
@@ -10,12 +11,23 @@ module MogilefsdLogTailer
 
     def post_init
       @received_data = ''
-      @port, @ip = Socket.unpack_sockaddr_in(get_peername)
+      pn = get_peername
+      if pn.nil?
+        @port, @ip = [ "unknown", -1 ]
+      else
+        @port, @ip = Socket.unpack_sockaddr_in(get_peername)
+      end
+    rescue
+      $stderr.puts "Exception in post_init: %s (%p)\n\t%s" %
+        [ $!.message, $!.class, $!.backtrace.join("\n\t") ]
     end
 
     def connection_completed
       send_data("!watch\r\n")
       @reconnects = 5
+    rescue
+      $stderr.puts "Exception in connection_completed: %s (%p)\n\t%s" %
+        [ $!.message, $!.class, $!.backtrace.join("\n\t") ]
     end
 
     def receive_data(data)
@@ -35,6 +47,9 @@ module MogilefsdLogTailer
       else
         @received_data << data
       end
+    rescue
+      $stderr.puts "Exception in receive_data: %s (%p)\n\t%s" %
+        [ $!.message, $!.class, $!.backtrace.join("\n\t") ]
     end
 
     def unbind
@@ -53,6 +68,9 @@ module MogilefsdLogTailer
           end
         end
       end
+    rescue
+      $stderr.puts "Exception in unbind: %s (%p)\n\t%s" %
+        [ $!.message, $!.class, $!.backtrace.join("\n\t") ]
     end
 
     def print_log_entry(line)
