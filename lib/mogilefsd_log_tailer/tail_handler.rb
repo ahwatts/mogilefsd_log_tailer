@@ -3,20 +3,22 @@ require 'socket'
 
 module MogilefsdLogTailer
   class TailHandler < EventMachine::Connection
-    def initialize(hostname, file)
+    def initialize(hostname, port, file)
       @hostname = hostname
+      @port = port.to_i
       @received_data = ''
       @file = file
+      @reconnect_wait = 1
     end
 
     def post_init
       @received_data = ''
-      pn = get_peername
-      if pn.nil?
-        @port, @ip = [ "unknown", -1 ]
-      else
-        @port, @ip = Socket.unpack_sockaddr_in(get_peername)
-      end
+      # pn = get_peername
+      # if pn.nil?
+      #   @port, @ip = [ "unknown", -1 ]
+      # else
+      #   @port, @ip = Socket.unpack_sockaddr_in(get_peername)
+      # end
     rescue
       $stderr.puts "Exception in post_init: %s (%p)\n\t%s" %
         [ $!.message, $!.class, $!.backtrace.join("\n\t") ]
@@ -24,7 +26,7 @@ module MogilefsdLogTailer
 
     def connection_completed
       send_data("!watch\r\n")
-      @reconnects = 5
+      @reconnect_wait = 1
     rescue
       $stderr.puts "Exception in connection_completed: %s (%p)\n\t%s" %
         [ $!.message, $!.class, $!.backtrace.join("\n\t") ]
@@ -53,21 +55,23 @@ module MogilefsdLogTailer
     end
 
     def unbind
-      if @reconnects > 0
-        print_log_entry "[mogilefsd_log_tailer] Connection closed to #{@hostname} (#{@ip}:#{@port}), reconnects left: #{@reconnects}"
-        @reconnects -= 1
-        EventMachine::Timer.new(1) do
-          print_log_entry "[mogilefsd_log_tailer] Reconnecting to #{@hostname} (#{@ip}:#{@port})..."
-          reconnect(@ip, @port)
-        end
-      else
-        print_log_entry "[mogilefsd_log_tailer] Giving up on #{@hostname} (#{@ip}:#{@port})"
-        EventMachine::Timer.new(0.5) do
-          if EventMachine.connection_count == 0
-            EventMachine.stop_event_loop
-          end
-        end
+      print_log_entry "[mogilefsd_log_tailer] Connection closed to #{@hostname}:#{@port}, reconnecting after #{@reconnect_wait} seconds."
+      EventMachine::Timer.new(@reconnect_wait) do
+        print_log_entry "[mogilefsd_log_tailer] Reconnecting to #{@hostname}:#{@port}..."
+        reconnect(@hostname, @port)
       end
+
+      @reconnect_wait *= 2
+      if @reconnect_wait > 120
+        @reconnect_wait = 120
+      end
+
+      # print_log_entry "[mogilefsd_log_tailer] Giving up on #{@hostname}:#{@port}"
+      # EventMachine::Timer.new(0.5) do
+      #   if EventMachine.connection_count == 0
+      #     EventMachine.stop_event_loop
+      #   end
+      # end
     rescue
       $stderr.puts "Exception in unbind: %s (%p)\n\t%s" %
         [ $!.message, $!.class, $!.backtrace.join("\n\t") ]

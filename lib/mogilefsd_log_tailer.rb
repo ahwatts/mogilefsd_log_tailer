@@ -63,7 +63,8 @@ module MogilefsdLogTailer
     EventMachine.run do
       hosts.each do |hp|
         host, port = hp.split(':')
-        EventMachine.connect(host, port.to_i, TailHandler, host, log_file)
+        EventMachine.connect(host, port.to_i,
+          TailHandler, host, port.to_i, log_file)
       end
     end
   end
