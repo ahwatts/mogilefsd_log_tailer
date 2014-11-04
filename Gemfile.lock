@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    mogilefsd_log_tailer (0.0.2)
+    mogilefsd_log_tailer (1.0.0)
       daemons
       eventmachine
 
